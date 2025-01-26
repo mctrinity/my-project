@@ -1,4 +1,4 @@
-# This workflow will build a Java project with Gradle and publish artifacts
+# This workflow will build a Java project with Gradle, publish artifacts, and push a Docker image
 name: Java CI with Gradle
 
 on:
@@ -52,13 +52,35 @@ jobs:
   publish:
     # Ensure this job runs after the build job
     needs: build
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest, macOS-latest]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
 
     steps:
     - uses: actions/checkout@v4
+
+    - name: Login to Docker Hub
+      env:
+        DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+        DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+      run: |
+        echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+
+    - name: Build and Push Docker Image
+      env:
+        IMAGE_NAME: your-dockerhub-username/java-gradle-app
+      run: |
+        # Generate Docker tag
+        IMAGE_TAG=${{ github.ref_name }}-${{ github.run_number }}
+
+        # Build and push the image
+        docker buildx build \
+          --platform linux/amd64 \
+          -t $IMAGE_NAME:$IMAGE_TAG \
+          -t $IMAGE_NAME:latest \
+          --push .
+
     - name: Upload JAR Artifact
       uses: actions/upload-artifact@v3
       with:
