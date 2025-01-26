@@ -63,7 +63,7 @@ jobs:
 
     - name: Build and Push Docker Image
       env:
-        IMAGE_NAME: your-dockerhub-username/java-gradle-app
+        IMAGE_NAME: thegoodbyegirl/java
       run: |
         # Generate Docker tag
         IMAGE_TAG=${{ github.ref_name }}-${{ github.run_number }}
